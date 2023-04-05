@@ -21,6 +21,7 @@ def clean_home_phone(home_phone)
 
 end
 
+# Adds to hash the number of registers at given hour
 def store_peak_hour(regdate, peak_hour)
   if peak_hour.key?(DateTime.strptime(regdate, '%m/%d/%Y %H:%M').hour)
     peak_hour[DateTime.strptime(regdate, '%m/%d/%Y %H:%M').hour] += 1
@@ -29,8 +30,23 @@ def store_peak_hour(regdate, peak_hour)
   end
 end
 
+# Adds to hash the number of registers at given day
+def store_peak_day(regdate, peak_day)
+  if peak_day.key?(DateTime.strptime(regdate, '%m/%d/%Y %H:%M').wday)
+    peak_day[DateTime.strptime(regdate, '%m/%d/%Y %H:%M').wday] += 1
+  else
+    peak_day[DateTime.strptime(regdate, '%m/%d/%Y %H:%M').wday] = 1
+  end
+end
+
+# Outputs peak hours
 def fetch_hour_target(peak_hour)
   peak_hour.each { |k, v| puts "Peak hour is: #{k} at #{v} registers" if v == peak_hour.values.max }
+end
+
+# Outputs peak days
+def fetch_day_target(peak_day)
+  peak_day.each { |k, v| puts "Peak day is: #{k} at #{v} registers" if v == peak_day.values.max }
 end
 
 def legislators_by_zipcode(zip)
@@ -70,6 +86,7 @@ template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
 
 peak_hour = {}
+peak_day = {}
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
@@ -77,7 +94,7 @@ contents.each do |row|
   home_phone = clean_home_phone(row[:homephone])
 
   store_peak_hour(row[:regdate], peak_hour)
-
+  store_peak_day(row[:regdate], peak_day)
   legislators = legislators_by_zipcode(zipcode)
 
   form_letter = erb_template.result(binding)
@@ -86,3 +103,4 @@ contents.each do |row|
 end
 
 fetch_hour_target(peak_hour)
+fetch_day_target(peak_day)
