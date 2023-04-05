@@ -21,7 +21,16 @@ def clean_home_phone(home_phone)
 
 end
 
-def fetch_hour_target(regdate)
+def store_peak_hour(regdate, peak_hour)
+  if peak_hour.key?(DateTime.strptime(regdate, '%m/%d/%Y %H:%M').hour)
+    peak_hour[DateTime.strptime(regdate, '%m/%d/%Y %H:%M').hour] += 1
+  else
+    peak_hour[DateTime.strptime(regdate, '%m/%d/%Y %H:%M').hour] = 1
+  end
+end
+
+def fetch_hour_target(peak_hour)
+  peak_hour.each { |k, v| puts "Peak hour is: #{k} at #{v} registers" if v == peak_hour.values.max }
 end
 
 def legislators_by_zipcode(zip)
@@ -60,13 +69,14 @@ contents = CSV.open(
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
 
+peak_hour = {}
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
   home_phone = clean_home_phone(row[:homephone])
 
-  hour_target = fetch_hour_target(row[:regdate])
+  store_peak_hour(row[:regdate], peak_hour)
 
   legislators = legislators_by_zipcode(zipcode)
 
@@ -74,3 +84,5 @@ contents.each do |row|
 
   save_thank_you_letter(id,form_letter)
 end
+
+fetch_hour_target(peak_hour)
